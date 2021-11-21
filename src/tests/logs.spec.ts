@@ -67,3 +67,41 @@ test('ADR: logs', t => {
   renameSpy.restore()
   cacheSpy.restore()
 })
+
+test('ADR: logs handles non existent indexes', t => {
+  let consoleSpy = sinon.stub(console, 'log')
+  let renameSpy = sinon.stub(fs, 'renameSync')
+  let cacheSpy = sinon.stub(LRU.prototype, 'get').returns({
+    path: 'some',
+    language: 'zh-cn'
+  })
+
+  let entriesSpy = sinon.stub(walkSync, 'entries').returns([
+    {
+      relativePath: '001-DAF编写完整的单元测试.md',
+      basePath: '/Users/fdhuang/learing/adr/docs/adr/',
+      mode: 33188,
+      size: 246,
+      mtime: 1511435254653
+    },
+    {
+      relativePath: 'README.md',
+      basePath: '/Users/fdhuang/learing/adr/docs/adr/',
+      mode: 33188,
+      size: 246,
+      mtime: 1511435254653
+    }
+  ])
+  let fsReadSpy = sinon.stub(fs, 'readFileSync')
+  fsReadSpy
+    .onCall(0).returns(mdTemplate)
+    .onCall(1).returns(mdTemplate)
+
+  let logs = ADR.logs('2')
+  t.deepEqual(logs, `File with index 2 does not exist.`)
+  fsReadSpy.restore()
+  entriesSpy.restore()
+  consoleSpy.restore()
+  renameSpy.restore()
+  cacheSpy.restore()
+})
